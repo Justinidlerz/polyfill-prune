@@ -7,10 +7,20 @@ fn filename() -> String {
     "input.js".into()
 }
 
+#[derive(Default, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+pub enum Environment {
+    #[default]
+    Ecmascript,
+    Browser,
+}
+
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Options {
     pub targets: Vec<String>,
+    #[serde(default)]
+    pub environment: Environment,
     #[serde(default = "filename")]
     pub filename: String,
     #[serde(default)]

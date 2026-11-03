@@ -44,7 +44,7 @@
     "version:packages": "changeset version && node scripts/sync-native-version.mjs && node scripts/sync-platform-packages.mjs",
     "platforms:sync": "node scripts/sync-platform-packages.mjs",
     "pack:release": "node scripts/pack-ci.mjs",
-    "data:sync": "cargo run --locked -p polyfill_prune_core --bin sync-compat -- node_modules/@mdn/browser-compat-data node_modules/typescript native/data/compat.json"
+    "data:sync": "cargo run --locked -p polyfill_prune_core --bin sync-compat -- node_modules/@mdn/browser-compat-data node_modules/typescript native/data/web-apis.json native/data/compat.json"
   },
   "devDependencies": {
     "@polyfill-prune/vite-plugin": "workspace:*",

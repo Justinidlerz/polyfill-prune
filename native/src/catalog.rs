@@ -1,5 +1,5 @@
-//! Generate native API locations/types from TypeScript's standard libraries,
-//! then attach MDN browser compatibility statements. No JS is executed.
+//! Combine TypeScript standard libraries and normalized Webref API locations
+//! with MDN browser compatibility statements. No JS is executed.
 use crate::compatibility::{Catalog, Feature};
 use oxc_allocator::Allocator;
 use oxc_ast::ast::*;
@@ -94,7 +94,7 @@ impl<'a> Visit<'a> for Declarations {
     }
 }
 
-pub fn generate(bcd_dir: &Path, ts_dir: &Path) -> Result<Catalog, String> {
+pub fn generate(bcd_dir: &Path, ts_dir: &Path, webref_file: &Path) -> Result<Catalog, String> {
     let read_json = |path: &Path| -> Result<Value, String> {
         serde_json::from_str(&fs::read_to_string(path).map_err(|e| e.to_string())?)
             .map_err(|e| e.to_string())
@@ -142,6 +142,7 @@ pub fn generate(bcd_dir: &Path, ts_dir: &Path) -> Result<Catalog, String> {
             .as_str()
             .ok_or("Missing TypeScript version")?
             .into(),
+        webref_revision: String::new(),
         features: BTreeMap::new(),
     };
     let mut add = |name: String, kind: &str| {
@@ -154,6 +155,7 @@ pub fn generate(bcd_dir: &Path, ts_dir: &Path) -> Result<Catalog, String> {
                 name,
                 Feature {
                     kind: kind.into(),
+                    web: false,
                     support: support
                         .iter()
                         .map(|(k, v)| (k.clone(), v.clone()))
@@ -190,6 +192,28 @@ pub fn generate(bcd_dir: &Path, ts_dir: &Path) -> Result<Catalog, String> {
     }
     // globalThis is a language-provided global, absent from TS library variables.
     add("globalThis".into(), "object");
+    let web: crate::web_catalog::WebCatalog =
+        serde_json::from_value(read_json(webref_file)?).map_err(|e| e.to_string())?;
+    catalog.webref_revision = web.revision;
+    for (path, feature) in web.features {
+        for bcd in feature.bcd {
+            let mut entry = &data["api"];
+            for part in bcd.split('.') {
+                entry = &entry[part];
+            }
+            if let Some(support) = entry["__compat"]["support"].as_object() {
+                catalog.features.entry(path).or_insert_with(|| Feature {
+                    kind: feature.kind,
+                    web: true,
+                    support: support
+                        .iter()
+                        .map(|(key, value)| (key.clone(), value.clone()))
+                        .collect(),
+                });
+                break;
+            }
+        }
+    }
     if catalog.features.is_empty() {
         return Err("No native APIs found in the supplied datasets".into());
     }
