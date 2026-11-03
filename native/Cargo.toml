@@ -1,0 +1,27 @@
+[package]
+name = "polyfill_prune_core"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.97"
+license = "MIT"
+description = "Target-aware JavaScript polyfill removal with Oxc"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+napi = { version = "=3.14.2", features = ["napi8", "serde-json"] }
+napi-derive = "=3.6.12"
+oxc_allocator = "=0.154.0"
+oxc_ast = "=0.154.0"
+oxc_ast_visit = "=0.154.0"
+oxc_parser = "=0.154.0"
+oxc_semantic = "=0.154.0"
+oxc_span = "=0.154.0"
+oxc_syntax = "=0.154.0"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sourcemap = "=9.3.2"
+
+[build-dependencies]
+napi-build = "2"

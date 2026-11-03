@@ -1,0 +1,23 @@
+{
+  "name": "polyfill-prune-darwin-arm64",
+  "version": "0.1.0",
+  "cpu": [
+    "arm64"
+  ],
+  "main": "polyfill-prune.darwin-arm64.node",
+  "files": [
+    "polyfill-prune.darwin-arm64.node"
+  ],
+  "description": "Native polyfill-prune binding for darwin-arm64",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
+  },
+  "os": [
+    "darwin"
+  ]
+}

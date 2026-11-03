@@ -1,0 +1,11 @@
+node_modules/
+dist/
+target/
+native/*.node
+*.tgz
+outputs/
+log/
+npm/**/*.node
+npm/*/LICENSE
+artifacts/
+.DS_Store

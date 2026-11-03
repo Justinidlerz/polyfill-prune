@@ -1,0 +1,4 @@
+packages:
+  - '.'
+  - 'npm/*'
+  - 'packages/*'

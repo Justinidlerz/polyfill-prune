@@ -1,0 +1,315 @@
+name: Release
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      publish_run_id:
+        description: 'Publish original archives from a completed main-branch Release run (empty = build check)'
+        required: false
+        type: string
+      publish_tag:
+        description: 'npm tag applied to published packages'
+        type: choice
+        options: [latest, beta]
+        default: latest
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  CI: true
+
+jobs:
+  prepare:
+    if: github.event_name != 'workflow_dispatch' || inputs.publish_run_id == ''
+    name: Check source and prepare Changesets version
+    runs-on: ubuntu-24.04
+    outputs:
+      has_release: ${{ steps.release.outputs.has_release }}
+      version: ${{ steps.release.outputs.version }}
+      npm_tag: ${{ steps.release.outputs.npm_tag }}
+      matrix: ${{ steps.release.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: pnpm
+      - uses: dtolnay/rust-toolchain@1.97.0
+        with:
+          components: rustfmt, clippy
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm format:check
+      - run: cargo fmt --all --check
+      - run: pnpm check:scripts
+      - name: Prepare release metadata
+        id: release
+        env:
+          RELEASE_MODE: ${{ github.event_name == 'pull_request' && 'beta' || github.event_name == 'push' && 'latest' || 'check' }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: node scripts/prepare-release.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-state
+          path: ${{ runner.temp }}/release-state.tgz
+          if-no-files-found: error
+
+  native:
+    name: Build ${{ matrix.platform }}
+    needs: prepare
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.prepare.outputs.matrix) }}
+    runs-on: ${{ matrix.runner }}
+    env:
+      CARGO_BUILD_TARGET: ${{ matrix.target }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-state
+          path: .release-state
+      - name: Apply prepared version
+        shell: bash
+        run: tar -xzf .release-state/release-state.tgz
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: pnpm
+      - uses: dtolnay/rust-toolchain@1.97.0
+        with:
+          targets: ${{ matrix.target }}
+          components: clippy
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.target }}
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm check:rust
+      - run: pnpm build
+      - run: pnpm typecheck
+      - run: pnpm example:vite
+      - name: Run examples and save their JSON output
+        shell: bash
+        run: |
+          mkdir -p outputs/example
+          node examples/prune.mjs > outputs/example/report.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: native-${{ matrix.platform }}
+          path: dist/*.node
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        if: matrix.sdk
+        with:
+          name: sdk-bindings
+          path: |
+            dist/*.js
+            dist/*.d.ts
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: example-reports-${{ matrix.platform }}
+          path: |
+            outputs/example/report.json
+          if-no-files-found: ignore
+
+  package:
+    name: Assemble npm packages
+    needs: [prepare, native]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          package-manager-cache: false
+      - uses: pnpm/action-setup@v6
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-state
+          path: ${{ runner.temp }}/release-state
+      - run: tar -xzf "$RUNNER_TEMP/release-state/release-state.tgz"
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: native-*
+          path: dist
+          merge-multiple: true
+      - uses: actions/download-artifact@v4
+        with:
+          name: sdk-bindings
+          path: dist
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - name: Build workspace JavaScript packages against the collected SDK
+        run: pnpm build:js
+      - name: Pack prebuilt binaries without rebuilding
+        run: node scripts/pack-ci.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: polyfill-prune-packages
+          path: |
+            artifacts/*.tgz
+            artifacts/release-manifest.json
+            artifacts/publish-ci.mjs
+          if-no-files-found: error
+
+  publish:
+    name: Publish ${{ needs.prepare.outputs.npm_tag }}
+    needs: [prepare, package]
+    if: >-
+      needs.prepare.outputs.has_release == 'true' &&
+      vars.NPM_RELEASE_USER != '' &&
+      github.triggering_actor == vars.NPM_RELEASE_USER &&
+      (
+        (github.event_name == 'pull_request' &&
+         github.event.pull_request.draft == false &&
+         github.event.pull_request.head.repo.full_name == github.repository &&
+         github.event.pull_request.user.login == vars.NPM_RELEASE_USER) ||
+        (github.event_name == 'push' &&
+         github.ref == 'refs/heads/main' &&
+         github.actor == vars.NPM_RELEASE_USER)
+      )
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
+      - name: Check npm publishing runtime
+        run: |
+          node --input-type=module <<'NODE'
+          import { execFileSync } from 'node:child_process';
+          const version = execFileSync('npm', ['--version'], { encoding: 'utf8' }).trim();
+          const [major, minor] = version.split('.').map(Number);
+          if (!(major > 11 || (major === 11 && minor >= 15))) {
+            throw new Error(`npm >= 11.15.0 required, found ${version}`);
+          }
+          NODE
+      - uses: actions/download-artifact@v4
+        with:
+          name: polyfill-prune-packages
+          path: artifacts
+      - name: Publish and verify packages in dependency order
+        env:
+          NPM_TAG: ${{ needs.prepare.outputs.npm_tag }}
+        run: node artifacts/publish-ci.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: npm-publish-results-${{ github.run_attempt }}
+          path: artifacts/publish-results.json
+          if-no-files-found: ignore
+
+  record-release:
+    name: Record published version metadata
+    needs: [prepare, publish]
+    if: github.event_name == 'push' && needs.prepare.outputs.npm_tag == 'latest'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          ref: ${{ github.sha }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-state
+          path: ${{ runner.temp }}/release-state
+      - name: Restore consumed Changesets and version files
+        run: |
+          rm -rf .changeset
+          tar -xzf "$RUNNER_TEMP/release-state/release-state.tgz"
+      - name: Commit and push version metadata
+        env:
+          RELEASE_BRANCH: ${{ github.ref_name }}
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          node scripts/record-release.mjs
+
+  publish-existing:
+    name: Publish original release archives
+    if: >-
+      github.event_name == 'workflow_dispatch' &&
+      inputs.publish_run_id != '' &&
+      github.ref == 'refs/heads/main' &&
+      vars.NPM_RELEASE_USER != '' &&
+      github.triggering_actor == vars.NPM_RELEASE_USER
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
+      - name: Validate original workflow run
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_RUN_ID: ${{ inputs.publish_run_id }}
+        run: |
+          node --input-type=module <<'NODE'
+          import { execFileSync } from 'node:child_process';
+          import { appendFileSync } from 'node:fs';
+          const version = execFileSync('npm', ['--version'], { encoding: 'utf8' }).trim();
+          const [major, minor] = version.split('.').map(Number);
+          if (!(major > 11 || (major === 11 && minor >= 15))) {
+            throw new Error(`npm >= 11.15.0 required, found ${version}`);
+          }
+          const id = process.env.SOURCE_RUN_ID;
+          if (!/^[1-9]\d*$/.test(id)) throw new Error('Invalid source run ID');
+          const run = JSON.parse(execFileSync('gh', ['api', `repos/${process.env.GITHUB_REPOSITORY}/actions/runs/${id}`], { encoding: 'utf8' }));
+          if (run.event !== 'push' || run.head_branch !== 'main' || run.path !== '.github/workflows/release.yml' || run.status !== 'completed') {
+            throw new Error('Recovery requires a completed main-branch Release push run');
+          }
+          appendFileSync(process.env.GITHUB_STEP_SUMMARY, `Original artifacts: run ${id}, source commit ${run.head_sha}. No rebuild.\n\n`);
+          NODE
+      - uses: actions/download-artifact@v4
+        with:
+          name: polyfill-prune-packages
+          path: artifacts
+          run-id: ${{ inputs.publish_run_id }}
+          github-token: ${{ github.token }}
+      - name: Apply current publishing script to original archives
+        run: cp scripts/publish-ci.mjs artifacts/publish-ci.mjs
+      - name: Publish missing versions and verify existing versions
+        env:
+          NPM_TAG: ${{ inputs.publish_tag }}
+        run: node artifacts/publish-ci.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: npm-publish-results-${{ github.run_attempt }}
+          path: artifacts/publish-results.json
+          if-no-files-found: ignore

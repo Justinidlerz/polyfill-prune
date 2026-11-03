@@ -1,0 +1,23 @@
+{
+  "name": "polyfill-prune-win32-x64-msvc",
+  "version": "0.1.0",
+  "cpu": [
+    "x64"
+  ],
+  "main": "polyfill-prune.win32-x64-msvc.node",
+  "files": [
+    "polyfill-prune.win32-x64-msvc.node"
+  ],
+  "description": "Native polyfill-prune binding for win32-x64-msvc",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
+  },
+  "os": [
+    "win32"
+  ]
+}
