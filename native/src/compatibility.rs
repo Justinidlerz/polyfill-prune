@@ -7,6 +7,8 @@ pub type Targets = BTreeMap<String, String>;
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Feature {
     pub kind: String,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub web: bool,
     pub support: BTreeMap<String, Value>,
 }
 
@@ -14,6 +16,8 @@ pub struct Feature {
 pub struct Catalog {
     pub bcd_version: String,
     pub typescript_version: String,
+    #[serde(default)]
+    pub webref_revision: String,
     pub features: BTreeMap<String, Feature>,
 }
 

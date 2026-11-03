@@ -5,5 +5,6 @@ export declare function version(): {
   parser: string;
   bcd: string;
   typescript: string;
+  webref: string;
   features: number;
 };

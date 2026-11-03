@@ -1,6 +1,8 @@
 export interface PruneOptions {
   /** Explicit minimum runtimes, e.g. ['chrome100', 'safari15.4']. */
   targets: string[];
+  /** Enable Window Web APIs with browser targets. Default: ecmascript. */
+  environment?: 'ecmascript' | 'browser';
   /** Input filename, also determines JavaScript/TypeScript/JSX parsing. Default: input.js. */
   filename?: string;
   /** Preserve exact APIs and their descendants, e.g. ['Promise', 'Array.prototype.includes']. */
@@ -22,7 +24,7 @@ export interface Removal {
   /** Replaced input range, in UTF-8 bytes. */
   start: number;
   end: number;
-  kind: 'if' | 'conditional' | 'logical';
+  kind: 'if' | 'conditional' | 'logical' | 'early-return' | 'for' | 'while';
   features: string[];
 }
 

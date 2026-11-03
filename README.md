@@ -18,6 +18,7 @@ import { prune } from '@polyfill-prune/core';
 const result = await prune(code, {
   targets: ['chrome100', 'safari15.4'],
   filename: 'vendor.js',
+  environment: 'browser',
 });
 // result.code / result.map / result.removals / result.diagnostics
 ```
@@ -36,7 +37,9 @@ For example, `Object.assign || function fallback() { /* … */ }` retains the na
 
 ## Scope
 
-Compatibility information comes from a pinned version of MDN Browser Compat Data. API types and prototype locations come from the TypeScript standard libraries. The core recognizes native API existence and `typeof` checks in `if` statements, conditional expressions, and `&&` / `||` / `??` expressions. Bundled or minified code is supported when these structures remain recognizable.
+Compatibility information comes from pinned MDN Browser Compat Data. TypeScript standard libraries describe ECMAScript APIs; W3C Webref Web IDL describes Window Web APIs. Recognition covers existence, `typeof` and `in` checks, compound guards, stable aliases, early returns, and `for`/`while` conditions. Bundled or minified code is supported when these structures remain recognizable.
+
+The core enables Web APIs with `environment: 'browser'`; its default is ECMAScript APIs only. The Vite plugin enables browser mode for client code.
 
 Only branches proven unnecessary are pruned. Generic core-js installers, arbitrary polyfill fingerprints, runtime bug checks, and whole-package removal are outside the current scope. Unrecognized structures, local shadowing, dynamic scope, and APIs with conflicting writes are preserved. See [recognition and limitations](docs/recognition.md).
 

@@ -21,6 +21,7 @@ export default defineConfig({
 | Option                      | Default                 | Description                                                                                          |
 | --------------------------- | ----------------------- | ---------------------------------------------------------------------------------------------------- |
 | `targets`                   | Resolved `build.target` | Explicit runtime target array; can override a build target that specifies only ES syntax             |
+| `environment`               | `'browser'`             | Window Web API analysis; use `'ecmascript'` to restrict pruning to language APIs                     |
 | `keep`                      | `[]`                    | Preserve APIs and their descendants                                                                  |
 | `sourceMap`                 | `true`                  | Generate transformation maps for Vite to compose                                                     |
 | `filter(id)`                | JS/TS module extensions | Receives module IDs during development and chunk filenames during production builds                  |
@@ -40,6 +41,8 @@ export default defineConfig({
 
 Production pruning runs on output chunks. If another output plugin injects polyfills after this plugin, adjust its hook order. Filtering chunk filenames does not filter individual source modules within those chunks.
 
-Only the `client` environment is processed. SSR, worker, and other environments are skipped. The development dependency cache includes targets, `keep`, the filter's source text, and core/data versions in the plugin identifier. In Vite 6/7, an earlier custom esbuild loader that handles a file prevents this plugin's `onLoad` hook from processing it again.
+Only the `client` environment is processed. SSR, worker, and other environments are skipped. The development dependency cache includes targets, `environment`, `keep`, the filter's source text, and core/data versions in the plugin identifier. In Vite 6/7, an earlier custom esbuild loader that handles a file prevents this plugin's `onLoad` hook from processing it again.
+
+Browser mode recognizes Web API guards, stable aliases, early-return continuations, and loop fallbacks. Getter attributes are checked for presence only. The core API uses ECMAScript-only mode by default; the plugin forwards its browser environment explicitly.
 
 The plugin removes only branches the core library can prove unnecessary. It does not guarantee removal of arbitrary bundled core-js code or custom installers. Syntax-only build targets such as `esnext` or `es2015` require an explicit `targets` option.

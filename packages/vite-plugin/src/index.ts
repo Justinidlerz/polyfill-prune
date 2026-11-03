@@ -7,6 +7,8 @@ import { prune, version } from '@polyfill-prune/core';
 import type { PruneOptions, PruneResult } from '@polyfill-prune/core';
 
 export interface PolyfillPruneOptions extends Omit<PruneOptions, 'filename' | 'targets'> {
+  /** Window Web API analysis for client code. Default: browser. */
+  environment?: PruneOptions['environment'];
   /** Defaults to the resolved Vite build.target. Syntax-only targets require an override. */
   targets?: string[];
   /** Defaults to JS/TS module files. Receives module IDs in dev and chunk filenames in build. */
@@ -33,6 +35,7 @@ export function polyfillPrune(options: PolyfillPruneOptions = {}): Plugin {
     const result = await prune(code, {
       targets,
       filename: id.split('?')[0],
+      environment: options.environment ?? 'browser',
       keep: options.keep,
       sourceMap: options.sourceMap,
     });
@@ -96,11 +99,12 @@ export function polyfillPrune(options: PolyfillPruneOptions = {}): Plugin {
       const target = options.targets ?? resolved.build.target;
       targets = typeof target === 'string' ? [target] : target || [];
       // Rust owns target parsing and validates even when no module needs pruning.
-      await prune('', { targets, sourceMap: false });
+      await prune('', { targets, environment: options.environment ?? 'browser', sourceMap: false });
       const fingerprint = createHash('sha256')
         .update(
           JSON.stringify({
             targets,
+            environment: options.environment ?? 'browser',
             keep: options.keep,
             sourceMap: options.sourceMap,
             filter: options.filter?.toString(),

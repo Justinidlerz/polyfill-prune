@@ -3,6 +3,7 @@ pub mod compatibility;
 mod model;
 mod output;
 pub mod transform;
+pub mod web_catalog;
 
 use napi::{Env, Task, bindgen_prelude::AsyncTask};
 use napi_derive::napi;
@@ -51,11 +52,11 @@ pub fn prune_raw(code: String, options: Value) -> AsyncTask<PruneTask> {
 }
 
 #[napi(
-    ts_return_type = "{ core: string; parser: string; bcd: string; typescript: string; features: number }"
+    ts_return_type = "{ core: string; parser: string; bcd: string; typescript: string; webref: string; features: number }"
 )]
 pub fn version() -> napi::Result<Value> {
     let catalog = catalog().map_err(napi::Error::from_reason)?;
     Ok(
-        json!({ "core": env!("CARGO_PKG_VERSION"), "parser": "0.154.0", "bcd": catalog.bcd_version, "typescript": catalog.typescript_version, "features": catalog.features.len() }),
+        json!({ "core": env!("CARGO_PKG_VERSION"), "parser": "0.154.0", "bcd": catalog.bcd_version, "typescript": catalog.typescript_version, "webref": catalog.webref_revision, "features": catalog.features.len() }),
     )
 }
