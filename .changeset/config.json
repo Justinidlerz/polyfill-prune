@@ -4,12 +4,12 @@
   "commit": false,
   "fixed": [
     [
-      "polyfill-prune",
-      "polyfill-prune-linux-x64-gnu",
-      "polyfill-prune-linux-arm64-gnu",
-      "polyfill-prune-darwin-arm64",
-      "polyfill-prune-darwin-x64",
-      "polyfill-prune-win32-x64-msvc"
+      "@polyfill-prune/core",
+      "@polyfill-prune/core-linux-x64-gnu",
+      "@polyfill-prune/core-linux-arm64-gnu",
+      "@polyfill-prune/core-darwin-arm64",
+      "@polyfill-prune/core-darwin-x64",
+      "@polyfill-prune/core-win32-x64-msvc"
     ]
   ],
   "linked": [],

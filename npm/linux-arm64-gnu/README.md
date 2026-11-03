@@ -1,3 +1,3 @@
-# polyfill-prune-linux-arm64-gnu
+# `@polyfill-prune/core-linux-arm64-gnu`
 
-Platform binary for `polyfill-prune`. Installed automatically as an optional dependency.
+This is the **aarch64-unknown-linux-gnu** binary for `@polyfill-prune/core`

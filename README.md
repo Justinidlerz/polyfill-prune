@@ -2,18 +2,18 @@
 
 Remove JavaScript polyfill branches that are no longer needed for your target runtimes. The Rust + Oxc core exposes a JavaScript API through N-API. The Vite plugin is a separate package in this repository.
 
-| Package                      | Purpose                                                                        |
-| ---------------------------- | ------------------------------------------------------------------------------ |
-| `polyfill-prune`             | Asynchronous pruning API, removal records, and source maps                     |
-| `vite-plugin-polyfill-prune` | Development transforms, dependency prebundling, and production chunk pruning   |
-| `polyfill-prune-<platform>`  | Native binaries for five platforms, selected automatically by the core package |
+| Package                           | Purpose                                                                        |
+| --------------------------------- | ------------------------------------------------------------------------------ |
+| `@polyfill-prune/core`            | Asynchronous pruning API, removal records, and source maps                     |
+| `@polyfill-prune/vite-plugin`     | Development transforms, dependency prebundling, and production chunk pruning   |
+| `@polyfill-prune/core-<platform>` | Native binaries for five platforms, selected automatically by the core package |
 
 ## Usage
 
-Requires Node.js >= 22.12.0. This version has not been published yet; [build it locally](docs/development.md). Once published, install it with `pnpm add -D polyfill-prune`.
+Requires Node.js >= 22.12.0. Install from the public npm registry with `pnpm add -D @polyfill-prune/core`. For a local build, see [development](docs/development.md).
 
 ```ts
-import { prune } from 'polyfill-prune';
+import { prune } from '@polyfill-prune/core';
 
 const result = await prune(code, {
   targets: ['chrome100', 'safari15.4'],
@@ -24,7 +24,7 @@ const result = await prune(code, {
 
 ```ts
 import { defineConfig } from 'vite';
-import polyfillPrune from 'vite-plugin-polyfill-prune';
+import polyfillPrune from '@polyfill-prune/vite-plugin';
 
 export default defineConfig({
   build: { target: ['chrome100', 'safari15.4'] },

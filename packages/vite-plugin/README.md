@@ -1,14 +1,14 @@
-# vite-plugin-polyfill-prune
+# @polyfill-prune/vite-plugin
 
-A polyfill pruning wrapper for Vite 6–8. Compatibility checks and AST rules run in the Rust API provided by `polyfill-prune`. Requires Node.js >= 22.12.0 and compliance with the Node.js requirements of your Vite version.
+A polyfill pruning wrapper for Vite 6–8. Compatibility checks and AST rules run in the Rust API provided by `@polyfill-prune/core`. Requires Node.js >= 22.12.0 and compliance with the Node.js requirements of your Vite version.
 
 ## Setup
 
-Once published, install with `pnpm add -D vite-plugin-polyfill-prune`. To work from this repository, run `pnpm install && pnpm build`, followed by `pnpm example:vite`.
+Install from the public npm registry with `pnpm add -D @polyfill-prune/vite-plugin`. To work from this repository, run `pnpm install && pnpm build`, followed by `pnpm example:vite`.
 
 ```ts
 import { defineConfig } from 'vite';
-import polyfillPrune from 'vite-plugin-polyfill-prune';
+import polyfillPrune from '@polyfill-prune/vite-plugin';
 
 export default defineConfig({
   build: { target: ['chrome100', 'safari15.4'] },

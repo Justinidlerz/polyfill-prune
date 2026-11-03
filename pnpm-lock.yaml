@@ -20,7 +20,7 @@ importers:
       '@types/node':
         specifier: ^22.19.0
         version: 22.20.5
-      polyfill-prune-example-vendor:
+      '@polyfill-prune/example-vendor':
         specifier: file:examples/vendor
         version: file:examples/vendor
       prettier:
@@ -32,23 +32,23 @@ importers:
       vite:
         specifier: ^8.2.1
         version: 8.3.5(@types/node@22.20.5)(yaml@2.9.1)
-      vite-plugin-polyfill-prune:
+      '@polyfill-prune/vite-plugin':
         specifier: workspace:*
         version: link:packages/vite-plugin
     optionalDependencies:
-      polyfill-prune-darwin-arm64:
+      '@polyfill-prune/core-darwin-arm64':
         specifier: workspace:*
         version: link:npm/darwin-arm64
-      polyfill-prune-darwin-x64:
+      '@polyfill-prune/core-darwin-x64':
         specifier: workspace:*
         version: link:npm/darwin-x64
-      polyfill-prune-linux-arm64-gnu:
+      '@polyfill-prune/core-linux-arm64-gnu':
         specifier: workspace:*
         version: link:npm/linux-arm64-gnu
-      polyfill-prune-linux-x64-gnu:
+      '@polyfill-prune/core-linux-x64-gnu':
         specifier: workspace:*
         version: link:npm/linux-x64-gnu
-      polyfill-prune-win32-x64-msvc:
+      '@polyfill-prune/core-win32-x64-msvc':
         specifier: workspace:*
         version: link:npm/win32-x64-msvc
 
@@ -64,7 +64,7 @@ importers:
 
   packages/vite-plugin:
     dependencies:
-      polyfill-prune:
+      '@polyfill-prune/core':
         specifier: workspace:*
         version: link:../..
     devDependencies:
@@ -1035,7 +1035,7 @@ packages:
     resolution: {integrity: sha512-qcJu88Q2IWqJsDD529JKMdwGm/dvInW4HvQnRwiH9JtihJvzGOscDtHE3x1pBKeUOTysQ8kVmLnJ2kJu7yhcGA==}
     engines: {node: '>=12'}
 
-  polyfill-prune-example-vendor@file:examples/vendor:
+  '@polyfill-prune/example-vendor@file:examples/vendor':
     resolution: {directory: examples/vendor, type: directory}
 
   postcss@8.5.32:
@@ -1952,7 +1952,7 @@ snapshots:
 
   picomatch@4.0.7: {}
 
-  polyfill-prune-example-vendor@file:examples/vendor: {}
+  '@polyfill-prune/example-vendor@file:examples/vendor': {}
 
   postcss@8.5.32:
     dependencies:

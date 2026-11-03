@@ -1,5 +1,5 @@
 {
-  "name": "polyfill-prune",
+  "name": "@polyfill-prune/core",
   "version": "0.1.0",
   "description": "Rust and Oxc powered removal of obsolete JavaScript polyfill branches",
   "type": "module",
@@ -28,10 +28,10 @@
   "scripts": {
     "build:native": "node scripts/build-native.mjs",
     "build:ts": "tsc -p tsconfig.json",
-    "build:plugin": "pnpm --filter vite-plugin-polyfill-prune build",
+    "build:plugin": "pnpm --filter @polyfill-prune/vite-plugin build",
     "build:js": "pnpm build:ts && pnpm build:plugin",
     "build": "node scripts/clean-dist.mjs && pnpm build:native && pnpm build:js",
-    "typecheck": "tsc --noEmit -p tsconfig.json && pnpm --filter vite-plugin-polyfill-prune typecheck",
+    "typecheck": "tsc --noEmit -p tsconfig.json && pnpm --filter @polyfill-prune/vite-plugin typecheck",
     "check:rust": "cargo check --locked --workspace && cargo clippy --locked --workspace -- -D warnings",
     "check:scripts": "node scripts/check-scripts.mjs",
     "prepack": "pnpm build",
@@ -47,14 +47,14 @@
     "data:sync": "cargo run --locked -p polyfill_prune_core --bin sync-compat -- node_modules/@mdn/browser-compat-data node_modules/typescript native/data/compat.json"
   },
   "devDependencies": {
-    "vite-plugin-polyfill-prune": "workspace:*",
+    "@polyfill-prune/vite-plugin": "workspace:*",
     "@changesets/cli": "3.0.3",
     "@napi-rs/cli": "3.10.8",
     "@types/node": "^22.19.0",
     "prettier": "3.6.2",
     "typescript": "^5.9.3",
     "vite": "^8.2.1",
-    "polyfill-prune-example-vendor": "file:examples/vendor",
+    "@polyfill-prune/example-vendor": "file:examples/vendor",
     "@mdn/browser-compat-data": "8.1.8"
   },
   "napi": {
@@ -73,10 +73,14 @@
     "provenance": true
   },
   "optionalDependencies": {
-    "polyfill-prune-darwin-arm64": "workspace:*",
-    "polyfill-prune-darwin-x64": "workspace:*",
-    "polyfill-prune-linux-arm64-gnu": "workspace:*",
-    "polyfill-prune-linux-x64-gnu": "workspace:*",
-    "polyfill-prune-win32-x64-msvc": "workspace:*"
+    "@polyfill-prune/core-darwin-arm64": "workspace:*",
+    "@polyfill-prune/core-darwin-x64": "workspace:*",
+    "@polyfill-prune/core-linux-arm64-gnu": "workspace:*",
+    "@polyfill-prune/core-linux-x64-gnu": "workspace:*",
+    "@polyfill-prune/core-win32-x64-msvc": "workspace:*"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Justinidlerz/polyfill-prune.git"
   }
 }

@@ -2,6 +2,20 @@
 
 Releases use Changesets, napi-rs builds for five platforms, and optional npm dependencies for platform binaries. The core package and platform packages share a fixed version. The Vite package is versioned independently.
 
+All packages publish publicly to `https://registry.npmjs.org/` under `@polyfill-prune`. The repository `.npmrc` and package `publishConfig` use this registry. Package names are `@polyfill-prune/core`, `@polyfill-prune/vite-plugin`, and `@polyfill-prune/core-<platform>`.
+
+## First publication
+
+The npm account must own or have publishing access to the `polyfill-prune` organization. Create the organization with the free public-package plan if it does not exist. Use Node.js >= 22.14 and npm >= 11.15 with account-level two-factor authentication.
+
+1. Log in with `npm login --registry=https://registry.npmjs.org/` and verify the account with `npm whoami`.
+2. Set the GitHub repository variable `NPM_RELEASE_USER` to the GitHub username authorized to publish.
+3. Download the `polyfill-prune-packages` artifact from a successful main-branch Release run into `artifacts/`. It contains all seven package archives, their integrity manifest, and the publishing script.
+4. Run `node artifacts/publish-ci.mjs --dry-run` to verify the archives, then `NPM_TAG=latest node artifacts/publish-ci.mjs --bootstrap`. Complete npm authentication prompts. This local first publication disables provenance because local sessions cannot generate GitHub Actions attestations. The bootstrap option is rejected in CI.
+5. For each package in `artifacts/release-manifest.json`, run `npm trust github <package> --allow-publish --repo Justinidlerz/polyfill-prune --file release.yml`. Verify each configuration with `npm trust list <package>`.
+
+Trusted publishers require packages to exist on npm, so configure them after the first publication. Subsequent releases run through GitHub Actions with OIDC and provenance. See the [npm trusted publishing documentation](https://docs.npmjs.com/trusted-publishers/) and [npm trust requirements](https://docs.npmjs.com/cli/v11/commands/npm-trust/).
+
 ## Workflow
 
 | Trigger                                                | Behavior                                                                                          |

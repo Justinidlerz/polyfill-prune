@@ -1,3 +1,3 @@
-# polyfill-prune-win32-x64-msvc
+# `@polyfill-prune/core-win32-x64-msvc`
 
-Platform binary for `polyfill-prune`. Installed automatically as an optional dependency.
+This is the **x86_64-pc-windows-msvc** binary for `@polyfill-prune/core`

@@ -1,5 +1,5 @@
 {
-  "name": "polyfill-prune-linux-x64-gnu",
+  "name": "@polyfill-prune/core-linux-x64-gnu",
   "version": "0.1.0",
   "cpu": [
     "x64"
@@ -8,10 +8,14 @@
   "files": [
     "polyfill-prune.linux-x64-gnu.node"
   ],
-  "description": "Native polyfill-prune binding for linux-x64-gnu",
+  "description": "Rust and Oxc powered removal of obsolete JavaScript polyfill branches",
   "license": "MIT",
   "engines": {
-    "node": ">=22"
+    "node": ">=22.12.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Justinidlerz/polyfill-prune.git"
   },
   "publishConfig": {
     "registry": "https://registry.npmjs.org/",

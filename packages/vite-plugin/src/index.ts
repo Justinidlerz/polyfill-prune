@@ -3,8 +3,8 @@ import { readFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import * as vite from 'vite';
 import type { Plugin, ResolvedConfig } from 'vite';
-import { prune, version } from 'polyfill-prune';
-import type { PruneOptions, PruneResult } from 'polyfill-prune';
+import { prune, version } from '@polyfill-prune/core';
+import type { PruneOptions, PruneResult } from '@polyfill-prune/core';
 
 export interface PolyfillPruneOptions extends Omit<PruneOptions, 'filename' | 'targets'> {
   /** Defaults to the resolved Vite build.target. Syntax-only targets require an override. */
@@ -78,7 +78,7 @@ export function polyfillPrune(options: PolyfillPruneOptions = {}): Plugin {
   };
 
   return {
-    name: 'vite-plugin-polyfill-prune',
+    name: '@polyfill-prune/vite-plugin',
     enforce: 'post',
     applyToEnvironment(environment) {
       return environment.name === 'client';

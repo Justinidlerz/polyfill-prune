@@ -1,3 +1,3 @@
-# polyfill-prune-darwin-x64
+# `@polyfill-prune/core-darwin-x64`
 
-Platform binary for `polyfill-prune`. Installed automatically as an optional dependency.
+This is the **x86_64-apple-darwin** binary for `@polyfill-prune/core`

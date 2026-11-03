@@ -1,4 +1,4 @@
-import { assign } from 'polyfill-prune-example-vendor';
+import { assign } from '@polyfill-prune/example-vendor';
 
 if (!Array.prototype.at) {
   Array.prototype.at = function legacyAt(index) {

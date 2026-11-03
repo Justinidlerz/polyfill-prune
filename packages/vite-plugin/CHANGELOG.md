@@ -1,4 +1,4 @@
-# vite-plugin-polyfill-prune
+# @polyfill-prune/vite-plugin
 
 ## 0.1.0
 

@@ -1,5 +1,5 @@
 {
-  "name": "vite-plugin-polyfill-prune",
+  "name": "@polyfill-prune/vite-plugin",
   "version": "0.1.0",
   "description": "Vite integration for the polyfill-prune Rust library",
   "type": "module",
@@ -26,7 +26,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
-    "polyfill-prune": "workspace:*"
+    "@polyfill-prune/core": "workspace:*"
   },
   "peerDependencies": {
     "vite": ">=6 <9"
@@ -38,6 +38,12 @@
   },
   "publishConfig": {
     "access": "public",
-    "registry": "https://registry.npmjs.org/"
+    "registry": "https://registry.npmjs.org/",
+    "provenance": true
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Justinidlerz/polyfill-prune.git",
+    "directory": "packages/vite-plugin"
   }
 }

@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import { prune, version } from 'polyfill-prune';
+import { prune, version } from '@polyfill-prune/core';
 
 const source = await readFile(new URL('./vendor/index.js', import.meta.url), 'utf8');
 const options = { targets: ['chrome100', 'safari15.4'], filename: 'vendor.js' };
