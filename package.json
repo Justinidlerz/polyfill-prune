@@ -1,6 +1,6 @@
 {
   "name": "@polyfill-prune/core",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Rust and Oxc powered removal of obsolete JavaScript polyfill branches",
   "type": "module",
   "license": "MIT",

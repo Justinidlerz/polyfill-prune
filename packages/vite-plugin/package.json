@@ -1,6 +1,6 @@
 {
   "name": "@polyfill-prune/vite-plugin",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Vite integration for the polyfill-prune Rust library",
   "type": "module",
   "license": "MIT",
