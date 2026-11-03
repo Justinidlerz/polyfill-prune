@@ -1,24 +1,24 @@
-# 构建、打包与发布
+# Building, packaging, and releases
 
-采用 Changesets、napi-rs 五平台构建和 npm 平台可选依赖。根包与平台包固定同版本，Vite 包独立版本。
+Releases use Changesets, napi-rs builds for five platforms, and optional npm dependencies for platform binaries. The core package and platform packages share a fixed version. The Vite package is versioned independently.
 
-## 工作流
+## Workflow
 
-| 触发                               | 行为                                         |
-| ---------------------------------- | -------------------------------------------- |
-| PR                                 | 检查、准备 beta 版本、五平台构建、示例和打包 |
-| main push                          | 检查、消费 Changesets、准备稳定版本并打包    |
-| 手动运行且不填 run ID              | 只检查和打包                                 |
-| 手动填写已完成 main Release run ID | 使用原归档恢复发布，不重新构建               |
+| Trigger                                                | Behavior                                                                                          |
+| ------------------------------------------------------ | ------------------------------------------------------------------------------------------------- |
+| Pull request                                           | Run checks, prepare a beta version, build all five platforms, run examples, and package artifacts |
+| Push to `main`                                         | Run checks, consume Changesets, prepare stable versions, and package artifacts                    |
+| Manual run without a run ID                            | Run checks and package artifacts only                                                             |
+| Manual run with a completed main-branch Release run ID | Resume publishing from the original archives without rebuilding                                   |
 
-发布需要待发布版本，并且 `NPM_RELEASE_USER` 与触发者匹配；PR 还需同仓库、非 draft 且作者匹配。npm 使用 Trusted Publishing/OIDC，每个平台包、核心包、Vite 包均需配置对应仓库与 `release.yml`。
+Publishing requires a pending release and a triggering user matching `NPM_RELEASE_USER`. Pull requests must also come from the same repository, be non-draft, and have a matching author. npm publishing uses Trusted Publishing with OIDC. Configure the repository and `release.yml` as the trusted publisher for every platform package, the core package, and the Vite package.
 
-发布脚本按依赖顺序发布，核对已存在版本的归档完整性。稳定版本发布成功后，工作流记录版本文件和 tags；本地构建及 Changesets 命令不会提交。
+The publishing script publishes packages in dependency order and checks archive integrity for versions that already exist. After a stable release succeeds, the workflow records version files and tags. Local builds and Changesets commands do not create commits.
 
-## 包检查
+## Package checks
 
-`pnpm pack:release` 要求 `dist/` 中恰好包含 `.github/native-targets.json` 的五个原生文件，核对原生版本、声明文件、入口、平台元数据及精确可选依赖版本，再生成 `artifacts/*.tgz` 和发布清单。
+`pnpm pack:release` requires `dist/` to contain exactly the five native binaries listed in `.github/native-targets.json`. It checks native versions, declaration files, entry points, platform metadata, and exact optional dependency versions, then generates `artifacts/*.tgz` and a release manifest.
 
-本机构建只生成本机二进制，无法代替五平台 CI。未配置 GitHub remote、仓库变量及 npm Trusted Publisher 前不会发布。
+A local build produces only the current platform's binary and does not replace the five-platform CI build. Publishing requires the GitHub remote, repository variables, and npm Trusted Publisher configuration.
 
-[返回首页](../README.md)
+[Back to the README](../README.md)

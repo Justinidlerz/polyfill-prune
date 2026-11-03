@@ -1,35 +1,35 @@
-# 核心 API
+# Core API
 
 ## `prune(code, options): Promise<PruneResult>`
 
-解析、作用域分析、兼容性判断、文本裁剪和 sourcemap 生成均在 Rust 工作线程执行，不执行输入代码。返回新代码，不修改磁盘文件。
+Parsing, scope analysis, compatibility checks, text pruning, and source map generation run on a Rust worker thread. The input code is never executed. The function returns transformed source without modifying files on disk.
 
-| 参数        | 类型       | 默认值     | 说明                                                           |
-| ----------- | ---------- | ---------- | -------------------------------------------------------------- |
-| `code`      | `string`   | 必填       | JavaScript、TypeScript 或 JSX 源码                             |
-| `targets`   | `string[]` | 必填       | 每个运行时的最低版本，例如 `chrome100`、`safari15.4`、`node22` |
-| `filename`  | `string`   | `input.js` | 决定解析模式及 sourcemap 源文件名                              |
-| `keep`      | `string[]` | `[]`       | 保留指定 API 及子路径，例如 `Promise` 或 `Array.prototype.at`  |
-| `sourceMap` | `boolean`  | `true`     | 为发生裁剪的文件生成 sourcemap                                 |
+| Parameter   | Type       | Default    | Description                                                                    |
+| ----------- | ---------- | ---------- | ------------------------------------------------------------------------------ |
+| `code`      | `string`   | Required   | JavaScript, TypeScript, or JSX source                                          |
+| `targets`   | `string[]` | Required   | Minimum runtime versions, such as `chrome100`, `safari15.4`, or `node22`       |
+| `filename`  | `string`   | `input.js` | Determines the parsing mode and source map filename                            |
+| `keep`      | `string[]` | `[]`       | Preserve an API and its descendants, such as `Promise` or `Array.prototype.at` |
+| `sourceMap` | `boolean`  | `true`     | Generate a source map for transformed files                                    |
 
-支持 `chrome`、`edge`、`firefox`、`safari`、`ios`、`opera`、`node`、`deno` 加显式版本。重复运行时取最低版本。只有全部目标的数据都明确支持时才裁剪。
+Supported runtime names are `chrome`, `edge`, `firefox`, `safari`, `ios`, `opera`, `node`, and `deno`, each followed by an explicit version. When a runtime appears more than once, the lowest version is used. Pruning requires explicit support data for every target.
 
-`es2015`、`esnext` 等语法目标不表示原生 API 支持，混合配置时忽略；只有语法目标时拒绝调用。Browserslist 查询和 `baseline-widely-available` 等别名由调用方先展开，Vite 插件使用 Vite 已解析的目标。
+Syntax targets such as `es2015` and `esnext` do not establish native API support. They are ignored when mixed with runtime targets; a call with only syntax targets is rejected. Callers must expand Browserslist queries and aliases such as `baseline-widely-available` first. The Vite plugin uses targets already resolved by Vite.
 
-| 返回字段      | 说明                                                |
-| ------------- | --------------------------------------------------- |
-| `code`        | 裁剪后代码；未命中时为原始字符串                    |
-| `changed`     | 是否应用了裁剪                                      |
-| `map`         | Source Map v3 对象；未改变或关闭映射时为 `null`     |
-| `removals`    | 每条记录包含 `start`、`end`、`kind`、`features`     |
-| `diagnostics` | 解析错误、语义错误或整文件保留原因；无问题时为 `[]` |
+| Result field  | Description                                                                                 |
+| ------------- | ------------------------------------------------------------------------------------------- |
+| `code`        | Transformed source, or the original string when nothing changes                             |
+| `changed`     | Whether pruning was applied                                                                 |
+| `map`         | A Source Map v3 object, or `null` when unchanged or source maps are disabled                |
+| `removals`    | Records containing `start`, `end`, `kind`, and `features`                                   |
+| `diagnostics` | Parse errors, semantic errors, or the reason a file was preserved; `[]` when there are none |
 
-移除记录的 `[start, end)` 是输入代码的 UTF-8 字节范围，描述被替换的完整表达式或语句。嵌套记录可能重叠，不能直接相加计算删除体积。`kind` 为 `if`、`conditional`、`logical`。Sourcemap 的列使用 UTF-16，映射到本次调用的输入；构建工具负责与上游映射合并。
+Each removal's `[start, end)` range uses UTF-8 byte offsets into the input and covers the entire replaced expression or statement. Nested records can overlap, so their lengths cannot be summed to calculate bytes removed. `kind` is `if`, `conditional`, or `logical`. Source map columns use UTF-16 and map to this call's input. The build tool composes the map with upstream maps.
 
-无效配置和内部转换错误导致 Promise reject。输入语法或语义不完整时原样返回，并提供 diagnostics。
+Invalid options and internal transformation errors reject the Promise. Input with syntax or semantic errors is returned unchanged with diagnostics.
 
 ## `version()`
 
-同步返回 `{ core, parser, bcd, typescript, features }`，分别为核心版本、Oxc 版本、MDN BCD 版本、类型数据来源版本和收录 API 数量。
+Synchronously returns `{ core, parser, bcd, typescript, features }`: the core version, Oxc version, MDN BCD version, TypeScript data source version, and number of cataloged APIs.
 
-[返回首页](../README.md)
+[Back to the README](../README.md)

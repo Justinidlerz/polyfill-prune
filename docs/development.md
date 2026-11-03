@@ -1,8 +1,8 @@
-# 开发与数据更新
+# Development and data updates
 
-## 构建
+## Building
 
-工具链：Rust >= 1.97.0、Node.js >= 22.12.0、pnpm 10.20.0。仓库开发使用的 napi CLI 与 Vite 可能要求更高的 Node 补丁版本，以依赖的 engines 为准。
+Toolchain: Rust >= 1.97.0, Node.js >= 22.12.0, and pnpm 10.20.0. The napi CLI and Vite versions used for development may require a newer Node.js patch release; follow their `engines` requirements.
 
 ```sh
 pnpm install --frozen-lockfile
@@ -14,29 +14,29 @@ pnpm example
 pnpm example:vite
 ```
 
-`pnpm build` 先构建本机原生库，再构建核心 JS API 和 Vite 包。需要 C/C++ 链接工具；安装发布包只需要对应平台的预构建二进制。
+`pnpm build` builds the native library for the current platform, followed by the core JavaScript API and the Vite package. Building from source requires a C/C++ linker toolchain. Published packages use prebuilt binaries for the matching platform.
 
-| 目录                      | 内容                                      |
-| ------------------------- | ----------------------------------------- |
-| `native/src`              | Rust 分析、裁剪、映射、N-API 和数据生成器 |
-| `native/data/compat.json` | 提交到仓库并嵌入原生库的兼容性数据        |
-| `src`                     | JS API 和 TypeScript 类型                 |
-| `packages/vite-plugin`    | 独立 Vite 包                              |
-| `npm/*`                   | 平台包                                    |
-| `examples`                | API、已 bundled 依赖和 Vite 示例          |
-| `scripts`                 | 构建、版本同步和发布工具                  |
+| Directory                 | Contents                                                                |
+| ------------------------- | ----------------------------------------------------------------------- |
+| `native/src`              | Rust analysis, pruning, source maps, N-API bindings, and data generator |
+| `native/data/compat.json` | Version-controlled compatibility data embedded in the native library    |
+| `src`                     | JavaScript API and TypeScript types                                     |
+| `packages/vite-plugin`    | Separate Vite package                                                   |
+| `npm/*`                   | Platform packages                                                       |
+| `examples`                | API, bundled dependency, and Vite examples                              |
+| `scripts`                 | Build, version synchronization, and release tools                       |
 
-## 数据更新
+## Updating data
 
 ```sh
 pnpm data:sync
 pnpm build
 ```
 
-生成器使用锁文件中的 `@mdn/browser-compat-data` 与 `typescript`。升级相应开发依赖后重新生成，检查数据差异；核心运行和用户安装均不联网下载兼容性数据。
+The generator uses the versions of `@mdn/browser-compat-data` and `typescript` pinned in the lockfile. After upgrading these development dependencies, regenerate the catalog and review the data diff. Compatibility data is not downloaded during normal runtime or package installation.
 
-Oxc 解析 TypeScript 的 `lib.es*.d.ts`，提取全局声明、构造器/可调用接口、静态方法与 prototype 方法，随后关联 BCD 的 `javascript.builtins`。命名空间、继承关系、访问器、可选或计算属性未建立完整映射时不收录。
+Oxc parses TypeScript's `lib.es*.d.ts` files to extract global declarations, constructor and callable interfaces, static methods, and prototype methods. These are then matched to BCD's `javascript.builtins` entries. Namespaces, inheritance, accessors, optional properties, and computed properties are excluded when a complete mapping is unavailable.
 
-新增规则或参数同时更新 API、识别范围及插件文档。代码不自动提交或推送。
+Update the API, recognition, and plugin documentation alongside new rules or options. Local commands do not automatically commit or push changes.
 
-[返回首页](../README.md)
+[Back to the README](../README.md)

@@ -1,10 +1,10 @@
 # vite-plugin-polyfill-prune
 
-Vite 6–8 的 polyfill 裁剪封装。依赖 `polyfill-prune` 的 Rust API，不在插件中实现兼容性或 AST 规则。需要 Node.js >= 22.12.0，并满足所用 Vite 版本的 Node 要求。
+A polyfill pruning wrapper for Vite 6–8. Compatibility checks and AST rules run in the Rust API provided by `polyfill-prune`. Requires Node.js >= 22.12.0 and compliance with the Node.js requirements of your Vite version.
 
-## 接入
+## Setup
 
-发布后通过 `pnpm add -D vite-plugin-polyfill-prune` 安装。仓库开发运行 `pnpm install && pnpm build`，再运行 `pnpm example:vite`。
+Once published, install with `pnpm add -D vite-plugin-polyfill-prune`. To work from this repository, run `pnpm install && pnpm build`, followed by `pnpm example:vite`.
 
 ```ts
 import { defineConfig } from 'vite';
@@ -16,30 +16,30 @@ export default defineConfig({
 });
 ```
 
-## 配置
+## Options
 
-| 参数                        | 默认值                  | 说明                                                         |
-| --------------------------- | ----------------------- | ------------------------------------------------------------ |
-| `targets`                   | 已解析的 `build.target` | 显式运行时目标数组；可覆盖仅有 ES 语法的构建目标             |
-| `keep`                      | `[]`                    | 保留 API 及其子路径                                          |
-| `sourceMap`                 | `true`                  | 为转换生成映射，交由 Vite 合并                               |
-| `filter(id)`                | JS/TS 模块扩展名        | 开发阶段接收模块 ID，生产阶段接收 chunk 文件名               |
-| `optimizeDeps`              | `true`                  | 在开发依赖预构建中调用核心 API                               |
-| `onResult(result, context)` | 无                      | 接收每次分析结果；context 包含 filename 和 stage，可异步执行 |
+| Option                      | Default                 | Description                                                                                          |
+| --------------------------- | ----------------------- | ---------------------------------------------------------------------------------------------------- |
+| `targets`                   | Resolved `build.target` | Explicit runtime target array; can override a build target that specifies only ES syntax             |
+| `keep`                      | `[]`                    | Preserve APIs and their descendants                                                                  |
+| `sourceMap`                 | `true`                  | Generate transformation maps for Vite to compose                                                     |
+| `filter(id)`                | JS/TS module extensions | Receives module IDs during development and chunk filenames during production builds                  |
+| `optimizeDeps`              | `true`                  | Run the core API during development dependency prebundling                                           |
+| `onResult(result, context)` | None                    | Receive each analysis result; context contains `filename` and `stage`; async callbacks are supported |
 
-`stage` 为 `dev`、`dependency` 或 `build`。虚拟模块、`?raw` 和 `?url` 请求跳过。若 filter 捕获可变外部状态，修改后通过 Vite `--force` 更新依赖缓存。
+`stage` is `dev`, `dependency`, or `build`. Virtual modules and requests with `?raw` or `?url` are skipped. If the filter captures mutable external state, use Vite's `--force` option to refresh the dependency cache after that state changes.
 
-## 执行阶段
+## Execution stages
 
-| 场景              | 接入点               | 输出                                                    |
-| ----------------- | -------------------- | ------------------------------------------------------- |
-| 开发源码          | `transform`，post    | 请求与 HMR 时返回裁剪代码                               |
-| Vite 6/7 依赖优化 | esbuild `onLoad`     | 对 JS 输入执行裁剪，再交给 esbuild                      |
-| Vite 8 依赖优化   | Rolldown `transform` | 原生 API 裁剪与映射链                                   |
-| 生产构建          | `renderChunk`，pre   | 对已打包 chunk 裁剪，后续压缩与 hash 计算使用修改后内容 |
+| Scenario                         | Hook                 | Output                                                                     |
+| -------------------------------- | -------------------- | -------------------------------------------------------------------------- |
+| Development source               | `transform`, post    | Pruned code for requests and HMR updates                                   |
+| Vite 6/7 dependency optimization | esbuild `onLoad`     | Pruned JavaScript input passed to esbuild                                  |
+| Vite 8 dependency optimization   | Rolldown `transform` | Pruned code with source map chaining                                       |
+| Production build                 | `renderChunk`, pre   | Pruned bundled chunks used by subsequent minification and hash calculation |
 
-生产源码阶段不裁剪。输出阶段的其他插件如果在本插件之后继续注入 polyfill，需要调整它们的 hook 顺序。构建 chunk 的文件过滤不等于源模块过滤。
+Production pruning runs on output chunks. If another output plugin injects polyfills after this plugin, adjust its hook order. Filtering chunk filenames does not filter individual source modules within those chunks.
 
-只处理 `client` environment；SSR、worker 和其他 environment 跳过。开发依赖缓存将目标、keep、filter 文本和核心/数据版本纳入插件标识。Vite 6/7 自定义 esbuild loader 若先接管文件，本插件的 onLoad 无法再次处理该文件。
+Only the `client` environment is processed. SSR, worker, and other environments are skipped. The development dependency cache includes targets, `keep`, the filter's source text, and core/data versions in the plugin identifier. In Vite 6/7, an earlier custom esbuild loader that handles a file prevents this plugin's `onLoad` hook from processing it again.
 
-只支持核心库能够证明的分支，不保证删除任意已 bundled 的 core-js 或自定义安装器。纯 `esnext`/`es2015` 目标必须补充 `targets`。
+The plugin removes only branches the core library can prove unnecessary. It does not guarantee removal of arbitrary bundled core-js code or custom installers. Syntax-only build targets such as `esnext` or `es2015` require an explicit `targets` option.
