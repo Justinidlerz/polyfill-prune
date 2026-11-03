@@ -303,6 +303,23 @@ jobs:
           github-token: ${{ github.token }}
       - name: Apply current publishing script to original archives
         run: cp scripts/publish-ci.mjs artifacts/publish-ci.mjs
+      - name: Restore pending uploads from the original run
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_RUN_ID: ${{ inputs.publish_run_id }}
+        run: |
+          node --input-type=module <<'NODE'
+          import { execFileSync } from 'node:child_process';
+          const repo = process.env.GITHUB_REPOSITORY;
+          const run = process.env.SOURCE_RUN_ID;
+          const pages = JSON.parse(execFileSync('gh', ['api', '--paginate', '--slurp', `repos/${repo}/actions/runs/${run}/artifacts?per_page=100`], { encoding: 'utf8' }));
+          const artifact = pages.flatMap(page => page.artifacts)
+            .filter(item => /^npm-publish-results-\d+$/.test(item.name) && !item.expired)
+            .sort((a, b) => b.id - a.id)[0];
+          if (artifact) {
+            execFileSync('gh', ['run', 'download', run, '--repo', repo, '--name', artifact.name, '--dir', 'artifacts'], { stdio: 'inherit' });
+          }
+          NODE
       - name: Publish missing versions and verify existing versions
         env:
           NPM_TAG: ${{ inputs.publish_tag }}

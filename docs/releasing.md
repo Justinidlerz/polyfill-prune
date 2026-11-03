@@ -27,7 +27,9 @@ Trusted publishers require packages to exist on npm, so configure them after the
 
 Publishing requires a pending release and a triggering user matching `NPM_RELEASE_USER`. Pull requests must also come from the same repository, be non-draft, and have a matching author. npm publishing uses Trusted Publishing with OIDC. Configure the repository and `release.yml` as the trusted publisher for every platform package, the core package, and the Vite package.
 
-The publishing script publishes packages in dependency order and checks archive integrity for versions that already exist. After a stable release succeeds, the workflow records version files and tags. Local builds and Changesets commands do not create commits.
+The publishing script groups archives by their package dependencies. It submits the five independent platform packages first and waits until all are available with matching integrity before publishing core, then the Vite plugin. Versions that already exist must match the original archive integrity. After a stable release succeeds, the workflow records version files and tags. Local builds and Changesets commands do not create commits.
+
+npm scans uploads before making them installable, so a successful upload can temporarily return `404` from the registry. Each dependency group allows 30 minutes for availability; set `NPM_PUBLISH_WAIT_MS` to override this positive integer timeout in milliseconds. The script records accepted uploads as `submitted` in `publish-results.json`. Keep this file beside the original archives when retrying locally to resume waiting without resubmitting accepted uploads. Manual workflow recovery restores the latest available result artifact from the source run automatically. Only `published` or `already-published` means registry visibility and archive integrity have been verified. See [npm publish-time scanning](https://github.blog/changelog/2026-07-28-npm-publish-time-malware-scanning-and-dual-use-metadata/).
 
 ## Package checks
 
